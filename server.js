@@ -10,28 +10,18 @@ const server = http.createServer(app);
 const io = socketIo(server);
 
 // Conexão ao banco de dados MongoDB
-mongoose.connect(process.env.MONGO_URI, {
+mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost/chatApp', {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-})
-    .then(() => console.log('Conectado ao MongoDB Atlas com sucesso!'))
-    .catch((error) => console.log('Erro ao conectar ao MongoDB:', error));
+});
 
 // Definição do esquema de usuário
 const userSchema = new mongoose.Schema({
     username: String,
     color: String,
 });
-const User = mongoose.model('User', userSchema);
 
-const messageSchema = new mongoose.Schema({
-    from: { username: String, color: String },
-    to: { type: String, default: null }, // 'null' for public, 'userId' for private messages
-    message: String,
-    timestamp: { type: Date, default: Date.now },
-    private: Boolean,
-});
-const Message = mongoose.model('Message', messageSchema);
+const User = mongoose.model('User', userSchema);
 
 // Configurar arquivos estáticos
 app.use(express.static('public'));
@@ -43,15 +33,6 @@ let connectedUsers = {};
 io.on('connection', (socket) => {
     console.log('Novo usuário conectado:', socket.id);
 
-    // Carregar mensagens anteriores ao conectar
-    Message.find().sort({ timestamp: 1 }).exec((err, messages) => {
-        if (err) {
-            console.error(err);
-            return;
-        }
-        socket.emit('loadMessages', messages); // Enviar mensagens salvas para o usuário
-    });
-
     // Evento para registrar o nome do usuário
     socket.on('setUsername', ({ username, color }) => {
         if (!username || !color) {
@@ -62,24 +43,12 @@ io.on('connection', (socket) => {
         console.log('Usuário registrado:', { username, color });
     });
 
-    // Enviar mensagem
-    socket.on('sendMessage', async ({ message, to }) => {
+    // Evento para enviar mensagem
+    socket.on('sendMessage', ({ message, to }) => {
         if (!message || !connectedUsers[socket.id]) {
             return;
         }
 
-        const messageData = {
-            from: connectedUsers[socket.id],
-            message,
-            private: !!to,
-            to: to || null, // store the user ID of the recipient for private messages
-        };
-
-        // Salvar mensagem no banco de dados
-        const newMessage = new Message(messageData);
-        await newMessage.save();
-
-        // Se for uma mensagem privada
         if (to) {
             // Mensagem privada
             socket.to(to).emit('receivePrivateMessage', {
@@ -109,7 +78,7 @@ io.on('connection', (socket) => {
     });
 
     // Evento para recebimento de imagens
-    socket.on('sendImage', async ({ image, to }) => {
+    socket.on('sendImage', ({ image, to }) => {
         if (!image || !connectedUsers[socket.id]) {
             return;
         }

@@ -103,20 +103,6 @@ socket.on('receiveMessage', ({ message, from, private }) => {
     if (soundEnabled) notificationSound.play();
 });
 
-// Receber mensagens privadas
-socket.on('receivePrivateMessage', ({ message, from }) => {
-    if (from.socketId === currentPrivateUserId) {
-        appendMessageToPrivateChat(`${from.username}: ${message}`, from.color);
-    } else {
-        if (soundEnabled) notificationSound.play();
-    }
-});
-
-// Exibir mensagens recebidas ao abrir o chat privado
-socket.on('receiveImage', ({ image, from }) => {
-    appendImageToMessages(image, from.username);
-});
-
 // Função para mensagens no chat principal
 function appendMessageToMessages(content, color) {
     const messageElement = document.createElement('div');
@@ -167,16 +153,13 @@ privateSendButton.addEventListener('click', () => {
     }
 });
 
-// Receber e exibir mensagens anteriores ao conectar
-socket.on('loadMessages', (messages) => {
-    messages.forEach((msg) => {
-        const { message, from, private } = msg;
-        if (private) {
-            appendMessageToPrivateChat(`${from.username}: ${message}`, from.color);
-        } else {
-            appendMessageToMessages(`${from.username}: ${message}`, from.color);
-        }
-    });
+// Receber mensagens privadas
+socket.on('receivePrivateMessage', ({ message, from }) => {
+    if (from.socketId === currentPrivateUserId) {
+        appendMessageToPrivateChat(`${from.username}: ${message}`, from.color);
+    } else {
+        if (soundEnabled) notificationSound.play();
+    }
 });
 
 // Enviar imagem
@@ -196,6 +179,10 @@ document.getElementById('image-upload').addEventListener('change', (event) => {
 });
 
 // Exibir imagens recebidas
+socket.on('receiveImage', ({ image, from }) => {
+    appendImageToMessages(image, `${from.username}`);
+});
+
 function appendImageToMessages(imageData, from) {
     const messageElement = document.createElement('div');
     messageElement.innerHTML = `<strong>${from}:</strong> <img src="${imageData}" style="max-width: 300px; max-height: 300px;">`;
