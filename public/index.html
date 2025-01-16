@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat App</title>
+    <link rel="stylesheet" href="./css/style.css" />
+</head>
+
+<body>
+    <div id="chat-container">
+        <div id="user-settings">
+            <input id="username" type="text" placeholder="Digite seu nome..." />
+            <input id="color" type="color" value="#000000" />
+            <button id="join-btn">Entrar</button>
+        </div>
+        <div id="chat">
+            <div id="messages"></div>
+            <input id="message-input" type="text" placeholder="Digite uma mensagem..." />
+            <button id="send-btn">Enviar</button>
+            <div>
+                <input type="file" id="image-upload" accept="image/*" style="display: none;" />
+                <button id="image-upload-btn">Enviar Imagem</button>
+            </div>
+
+        </div>
+    </div>
+    <div id="user-list">
+        <h4>Usuários Conectados</h4>
+        <ul id="users"></ul>
+    </div>
+
+    <!-- Container para o chat privado -->
+    <div id="private-chat-container" style="display: none;">
+        <div id="private-chat-header">
+            <span id="private-chat-username"></span> - Chat Privado
+            <button id="close-private-chat-btn">Fechar</button>
+        </div>
+        <div id="private-messages"></div>
+        <input id="private-message-input" type="text" placeholder="Digite uma mensagem..." />
+        <button id="private-send-btn">Enviar</button>
+    </div>
+
+
+    <!-- Botão para ativar/desativar som -->
+    <button id="toggle-sound" title="Ativar/Desativar Som">
+        <span id="sound-icon">X</span>
+    </button>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="./js/chat.js"></script>
+</body>
+
+</html>
