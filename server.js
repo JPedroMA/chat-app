@@ -4,18 +4,16 @@ const socketIo = require('socket.io');
 const mongoose = require('mongoose');
 require('dotenv').config();
 
-// Configuração inicial do servidor
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-// Conexão ao banco de dados MongoDB
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost/chatApp', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-});
+// Conexão com o MongoDB
+mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost/chatApp')
+    .then(() => console.log('Conectado ao MongoDB com sucesso'))
+    .catch((err) => console.error('Erro ao conectar ao MongoDB:', err));
 
-// Definição do esquema de usuário
+// Esquema e modelo de usuário
 const userSchema = new mongoose.Schema({
     username: String,
     color: String,
@@ -23,31 +21,31 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
-// Configurar arquivos estáticos
 app.use(express.static('public'));
 
-// Lista de usuários conectados na memória
 let connectedUsers = {};
 
-// Evento de conexão
+// Gerenciamento de conexões com sockets
 io.on('connection', (socket) => {
     console.log('Novo usuário conectado:', socket.id);
 
-    // Evento para registrar o nome do usuário
-    socket.on('setUsername', ({ username, color }) => {
-        if (!username || !color) {
-            return;
-        }
+    // Registro do usuário
+    socket.on('setUsername', async ({ username, color }) => {
+        if (!username || !color) return;
+
         connectedUsers[socket.id] = { username, color, socketId: socket.id };
+
+        // Salvando no banco, caso seja necessário manter históricos de login
+        const newUser = new User({ username, color });
+        await newUser.save().catch(err => console.error('Erro ao salvar usuário:', err));
+
         io.emit('updateUserList', Object.values(connectedUsers));
         console.log('Usuário registrado:', { username, color });
     });
 
-    // Evento para enviar mensagem
+    // Gerenciamento de mensagens públicas e privadas
     socket.on('sendMessage', ({ message, to }) => {
-        if (!message || !connectedUsers[socket.id]) {
-            return;
-        }
+        if (!message || !connectedUsers[socket.id]) return;
 
         if (to) {
             // Mensagem privada
@@ -55,13 +53,9 @@ io.on('connection', (socket) => {
                 message,
                 from: connectedUsers[socket.id],
             });
-
-            // Enviar notificação ao destinatário
             socket.to(to).emit('privateMessageNotification', {
                 from: connectedUsers[socket.id],
             });
-
-            // Confirmar envio ao remetente
             socket.emit('receivePrivateMessage', {
                 message,
                 from: connectedUsers[socket.id],
@@ -77,32 +71,26 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Evento para recebimento de imagens
+    // Gerenciamento de envio de imagens
     socket.on('sendImage', ({ image, to }) => {
-        if (!image || !connectedUsers[socket.id]) {
-            return;
-        }
+        if (!image || !connectedUsers[socket.id]) return;
 
         if (to) {
-            // Imagem enviada para um usuário específico
+            // Imagem em chat privado
             socket.to(to).emit('receiveImage', {
                 image,
                 from: connectedUsers[socket.id],
             });
-
-            // Notificação de imagem privada
             socket.to(to).emit('privateMessageNotification', {
                 from: connectedUsers[socket.id],
             });
-
-            // Confirmar envio ao remetente
             socket.emit('receiveImage', {
                 image,
                 from: connectedUsers[socket.id],
                 self: true,
             });
         } else {
-            // Imagem enviada publicamente
+            // Imagem em chat público
             io.emit('receiveImage', {
                 image,
                 from: connectedUsers[socket.id],
@@ -110,7 +98,7 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Evento para desconexão
+    // Desconexão do usuário
     socket.on('disconnect', () => {
         if (connectedUsers[socket.id]) {
             console.log('Usuário desconectado:', connectedUsers[socket.id].username);
@@ -120,7 +108,7 @@ io.on('connection', (socket) => {
     });
 });
 
-// Iniciar o servidor
+// Inicialização do servidor
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`Servidor rodando em http://localhost:${PORT}`);

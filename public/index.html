@@ -1,55 +1,61 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Chat App</title>
-    <link rel="stylesheet" href="./css/style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Interativo</title>
+    <link rel="stylesheet" href="./css/style.css"/>
 </head>
-
 <body>
-    <div id="chat-container">
-        <div id="user-settings">
-            <input id="username" type="text" placeholder="Digite seu nome..." />
-            <input id="color" type="color" value="#000000" />
-            <button id="join-btn">Entrar</button>
-        </div>
-        <div id="chat">
-            <div id="messages"></div>
-            <input id="message-input" type="text" placeholder="Digite uma mensagem..." />
-            <button id="send-btn">Enviar</button>
-            <div>
-                <input type="file" id="image-upload" accept="image/*" style="display: none;" />
-                <button id="image-upload-btn">Enviar Imagem</button>
-            </div>
 
+<div id="chat-container">
+    <!-- Painel de configurações do usuário -->
+    <div id="user-settings">
+        <h2>Escolha o seu nome e a cor de exibição</h2>
+        <input type="text" id="username" placeholder="Digite o seu nome...">
+        <input type="color" id="color">
+        <button id="join-btn">Entrar no chat</button>
+    </div>
+
+    <!-- Chat -->
+    <div id="chat">
+        <div id="messages"></div>
+        <div id="input-container">
+            <input type="text" id="message-input" placeholder="Digite sua mensagem...">
+            <button id="send-btn">Enviar</button>
+        </div>
+        <div>
+            <input type="file" id="image-upload" accept="image/*" style="display: none;" />
+            <button id="image-upload-btn">Enviar Imagem</button>
         </div>
     </div>
+
+    <!-- Painel de usuários -->
     <div id="user-list">
-        <h4>Usuários Conectados</h4>
+        <h3 >Usuários Online</h3>
         <ul id="users"></ul>
     </div>
 
-    <!-- Container para o chat privado -->
-    <div id="private-chat-container" style="display: none;">
-        <div id="private-chat-header">
-            <span id="private-chat-username"></span> - Chat Privado
-            <button id="close-private-chat-btn">Fechar</button>
-        </div>
-        <div id="private-messages"></div>
-        <input id="private-message-input" type="text" placeholder="Digite uma mensagem..." />
-        <button id="private-send-btn">Enviar</button>
-    </div>
-
-
-    <!-- Botão para ativar/desativar som -->
-    <button id="toggle-sound" title="Ativar/Desativar Som">
-        <span id="sound-icon">X</span>
+    <!-- Notificação de som -->
+    <button id="toggle-sound">
+        <span id="sound-icon">🔊</span> <!-- Ícone de som inicial -->
     </button>
 
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="./js/chat.js"></script>
-</body>
+    <!-- Chat privado -->
+    <div id="private-chat-container">
+        <div id="private-chat-header">
+            <span id="private-chat-username">Chat Privado</span>
+            <button id="close-private-chat-btn">X</button>
+        </div>
+        <div id="private-messages"></div>
+        <div id="private-input-container">
+            <input type="text" id="private-message-input" placeholder="Mensagem privada...">
+            <button id="private-send-btn">Enviar</button>
+        </div>
+    </div>
+</div>
 
+<script src="/socket.io/socket.io.js"></script>
+<script src="./js/chat.js"></script>
+</body>
 </html>
